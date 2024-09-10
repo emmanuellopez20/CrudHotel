@@ -2,6 +2,8 @@ import tkinter as tk
 from tkinter import messagebox
 from tkinter import ttk
 from tkinter import *
+import re
+import datetime
 
 class App(tk.Tk):
     def __init__(self):
@@ -138,9 +140,22 @@ class pestanaClientes(ttk.Frame):
                 self.btCancelar.config(state=tk.NORMAL)
                 return
         messagebox.showerror("Error", "Cliente no encontrado")
+    def validar_entrada(self):
+        if not self.txId.get().isdigit():
+            messagebox.showerror("Error", "El ID debe ser un número entero")
+            return False
+        if not self.txTelefono.get().isdigit():
+            messagebox.showerror("Error", "El teléfono debe ser un número entero")
+            return False
+        if not re.match(r"[^@]+@[^@]+\.[^@]+", self.txEmail.get()):
+            messagebox.showerror("Error", "El email no tiene un formato válido")
+            return False
+        return True
 
 
     def salvar_cliente(self):
+        if not self.validar_entrada():
+            return
         cliente = {
             "ID": self.txId.get(),
             "Nombre": self.txNombre.get(),
@@ -165,6 +180,8 @@ class pestanaClientes(ttk.Frame):
         self.btEliminar.config(state=tk.DISABLED)
 
     def editar_cliente(self):
+        if not self.validar_entrada():
+            return
         id_cliente = self.txId.get()
         for cliente in self.clientes:
             if cliente["ID"] == id_cliente:
@@ -298,9 +315,18 @@ class PestanaHabitaciones(ttk.Frame):
                 self.btCancelar.config(state=tk.NORMAL)
                 return
         messagebox.showerror("Error", "Habitación no encontrada")
-
+    def validar_entrada(self):
+        if not self.txHabitacionId.get().isdigit():
+            messagebox.showerror("Error", "El ID de la habitación debe ser un número entero")
+            return False
+        if not self.txNumero.get().isdigit():
+            messagebox.showerror("Error", "El número de la habitación debe ser un número entero")
+            return False
+        return True
 
     def salvar_habitacion(self):
+        if not self.validar_entrada():
+            return
         habitacion = {
             "ID": self.txHabitacionId.get(),
             "Numero_Habitacion": self.txNumero.get(),
@@ -320,6 +346,8 @@ class PestanaHabitaciones(ttk.Frame):
         self.btEditar.config(state=tk.DISABLED)
 
     def editar_habitacion(self):
+        if not self.validar_entrada():
+            return
         id_habitacion = self.txHabitacionId.get()
         for habitacion in self.habitaciones:
             if habitacion["ID"] == id_habitacion:
@@ -473,13 +501,36 @@ class pestanaReservaciones(ttk.Frame):
                 return
         messagebox.showerror("Error", "Reservación no encontrada")
 
+    def validar_entrada(self):
+        if not self.txId.get().isdigit():
+            messagebox.showerror("Error", "El ID de la reservación debe ser un número entero")
+            return False
+        if not self.txCosto.get().isdigit():
+            messagebox.showerror("Error", "El costo debe ser un número entero")
+            return False
+        if not re.match(r"\d{2}-\d{2}-\d{4}", self.txFechaSalida.get()):
+            messagebox.showerror("Error", "La fecha de salida debe estar en el formato DD-MM-YYYY")
+            return False
+        fecha_salida = datetime.datetime.strptime(self.txFechaSalida.get(), "%d-%m-%Y")
+        fecha_actual = datetime.datetime.now()
+        if fecha_salida <= fecha_actual:
+            messagebox.showerror("Error", "La fecha de salida debe ser mayor a la fecha actual")
+            return False
+        return True
+
     def salvar_reservacion(self):
+        if not self.validar_entrada():
+            return
+        fecha_actual = datetime.datetime.now()
+        fecha_reservacion = fecha_actual.strftime("%d-%m-%Y")
+        hora_reservacion = fecha_actual.strftime("%H:%M:%S")
+
         reservacion = {
             "ReservacionID": self.txId.get(),
             "ClienteID": self.cbClienteId.get(),
             "HabitacionID": self.cbHabitacionID.get(),
-            "Fecha_Reservacion": self.txFechaReser.get(),
-            "Hora_Reservacion": self.txHoraReser.get(),
+            "Fecha_Reservacion": fecha_reservacion,
+            "Hora_Reservacion": hora_reservacion,
             "Fecha_Salida": self.txFechaSalida.get(),
             "Costo": self.txCosto.get()
         }
@@ -504,7 +555,24 @@ class pestanaReservaciones(ttk.Frame):
         self.btCancelar.config(state=tk.DISABLED)
         self.btEditar.config(state=tk.DISABLED)
 
+        # Limpiar campos de entrada
+        self.txId.delete(0, tk.END)
+        self.cbClienteId.set('')
+        self.cbHabitacionID.set('')
+        self.txCosto.delete(0, tk.END)
+        self.txFechaReser.delete(0, tk.END)
+        self.txFechaSalida.delete(0, tk.END)
+        self.txHoraReser.delete(0, tk.END)
+
+        # Deshabilitar botones
+        self.btSalvar.config(state=tk.DISABLED)
+        self.btCancelar.config(state=tk.DISABLED)
+        self.btEditar.config(state=tk.DISABLED)
+
+
     def editar_reservacion(self):
+        if not self.validar_entrada():
+            return
         id_reservacion = self.txId.get()
         for reservacion in self.reservaciones:
             if reservacion["ReservacionID"] == id_reservacion:
@@ -530,9 +598,32 @@ class pestanaReservaciones(ttk.Frame):
                 self.btCancelar.config(state=tk.DISABLED)
                 return
         messagebox.showerror("Error", "Reservación no encontrada")
-
     def cancelar_reservacion(self):
-        id_reservacion = self.tx
+        id_reservacion = self.txIngresarId.get()
+        for reservacion in self.reservaciones:
+            if reservacion["ReservacionID"] == id_reservacion:
+                self.reservaciones.remove(reservacion)
+                for habitacion in self.habitaciones:
+                    if habitacion["ID"] == reservacion["HabitacionID"]:
+                        habitacion["Estado"] = "Libre"
+                        break
+                messagebox.showinfo("Información", "Reservación cancelada exitosamente")
+
+                # Limpiar campos de entrada
+                self.txId.delete(0, tk.END)
+                self.cbClienteId.set('')
+                self.cbHabitacionID.set('')
+                self.txCosto.delete(0, tk.END)
+                self.txFechaReser.delete(0, tk.END)
+                self.txFechaSalida.delete(0, tk.END)
+                self.txHoraReser.delete(0, tk.END)
+
+                # Deshabilitar botones
+                self.btSalvar.config(state=tk.DISABLED)
+                self.btCancelar.config(state=tk.DISABLED)
+                self.btEditar.config(state=tk.DISABLED)
+                return
+        messagebox.showerror("Error", "Reservación no encontrada")
 
 if __name__=="__main__":
     app=App()
