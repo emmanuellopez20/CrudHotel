@@ -531,7 +531,7 @@ class pestanaReservaciones(ttk.Frame):
         if not re.match(r"\d{4}-\d{2}-\d{2}", self.txFechaSalida.get()):
             messagebox.showerror("Error", "La fecha de salida debe estar en el formato DD-MM-YYYY")
             return False
-        fecha_salida = datetime.datetime.strptime(self.txFechaSalida.get(), "%d-%m-%Y")
+        fecha_salida = datetime.datetime.strptime(self.txFechaSalida.get(), "%Y-%m-%d")
         fecha_actual = datetime.datetime.now()
         if fecha_salida <= fecha_actual:
             messagebox.showerror("Error", "La fecha de salida debe ser mayor a la fecha actual")
@@ -642,4 +642,3 @@ class pestanaReservaciones(ttk.Frame):
 if __name__=="__main__":
     app=App()
     app.mainloop()
-
