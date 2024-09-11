@@ -616,9 +616,10 @@ class pestanaReservaciones(ttk.Frame):
         id_reservacion = self.txIngresarId.get()
         for reservacion in self.reservaciones:
             if reservacion["ReservacionID"] == id_reservacion:
+                habitacion_id = reservacion["HabitacionID"]
                 self.reservaciones.remove(reservacion)
                 for habitacion in self.habitaciones:
-                    if habitacion["ID"] == reservacion["HabitacionID"]:
+                    if habitacion["ID"] == habitacion_id:
                         habitacion["Estado"] = "Libre"
                         break
                 messagebox.showinfo("Información", "Reservación cancelada exitosamente")
