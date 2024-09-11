@@ -4,6 +4,7 @@ from tkinter import ttk
 from tkinter import *
 import re
 import datetime
+import os
 
 class App(tk.Tk):
     def __init__(self):
@@ -150,7 +151,16 @@ class pestanaClientes(ttk.Frame):
         if not re.match(r"[^@]+@[^@]+\.[^@]+", self.txEmail.get()):
             messagebox.showerror("Error", "El email no tiene un formato válido")
             return False
+        if self.nombre_cliente_duplicado(self.txNombre.get()):
+            messagebox.showerror("Error", "El nombre del cliente ya existe")
+            return False
         return True
+    
+    def nombre_cliente_duplicado(self, nombre):
+        for cliente in self.clientes:
+            if cliente["Nombre"] == nombre:
+                return True
+        return False
 
 
     def salvar_cliente(self):
@@ -322,7 +332,16 @@ class PestanaHabitaciones(ttk.Frame):
         if not self.txNumero.get().isdigit():
             messagebox.showerror("Error", "El número de la habitación debe ser un número entero")
             return False
+        if self.numero_habitacion_duplicado(self.txNumero.get()):
+            messagebox.showerror("Error", "El número de la habitación ya existe")
+            return False
         return True
+
+    def numero_habitacion_duplicado(self, numero_habitacion):
+        for habitacion in self.habitaciones:
+            if habitacion["Numero_Habitacion"] == numero_habitacion:
+                return True
+        return False
 
     def salvar_habitacion(self):
         if not self.validar_entrada():
@@ -508,21 +527,30 @@ class pestanaReservaciones(ttk.Frame):
         if not self.txCosto.get().isdigit():
             messagebox.showerror("Error", "El costo debe ser un número entero")
             return False
-        if not re.match(r"\d{2}-\d{2}-\d{4}", self.txFechaSalida.get()):
-            messagebox.showerror("Error", "La fecha de salida debe estar en el formato DD-MM-YYYY")
+        if not re.match(r"\d{4}-\d{2}-\d{2}", self.txFechaSalida.get()):
+            messagebox.showerror("Error", "La fecha de salida debe estar en el formato AAAA-MM-DD")
             return False
-        fecha_salida = datetime.datetime.strptime(self.txFechaSalida.get(), "%d-%m-%Y")
+        fecha_salida = datetime.datetime.strptime(self.txFechaSalida.get(), "%Y-%m-%d")
         fecha_actual = datetime.datetime.now()
         if fecha_salida <= fecha_actual:
             messagebox.showerror("Error", "La fecha de salida debe ser mayor a la fecha actual")
             return False
+        if self.habitacion_duplicada(self.cbHabitacionID.get()):
+            messagebox.showerror("Error", "El número de habitación ya está reservado")
+            return False
         return True
+    
+    def habitacion_duplicada(self, habitacion_id):
+        for reservacion in self.reservaciones:
+            if reservacion["HabitacionID"] == habitacion_id:
+                return True
+        return False
 
     def salvar_reservacion(self):
         if not self.validar_entrada():
             return
         fecha_actual = datetime.datetime.now()
-        fecha_reservacion = fecha_actual.strftime("%d-%m-%Y")
+        fecha_reservacion = fecha_actual.strftime("%Y-%m-%d")
         hora_reservacion = fecha_actual.strftime("%H:%M:%S")
 
         reservacion = {
@@ -554,21 +582,6 @@ class pestanaReservaciones(ttk.Frame):
         self.btSalvar.config(state=tk.DISABLED)
         self.btCancelar.config(state=tk.DISABLED)
         self.btEditar.config(state=tk.DISABLED)
-
-        # Limpiar campos de entrada
-        self.txId.delete(0, tk.END)
-        self.cbClienteId.set('')
-        self.cbHabitacionID.set('')
-        self.txCosto.delete(0, tk.END)
-        self.txFechaReser.delete(0, tk.END)
-        self.txFechaSalida.delete(0, tk.END)
-        self.txHoraReser.delete(0, tk.END)
-
-        # Deshabilitar botones
-        self.btSalvar.config(state=tk.DISABLED)
-        self.btCancelar.config(state=tk.DISABLED)
-        self.btEditar.config(state=tk.DISABLED)
-
 
     def editar_reservacion(self):
         if not self.validar_entrada():
