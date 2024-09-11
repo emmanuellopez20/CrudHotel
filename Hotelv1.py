@@ -325,14 +325,14 @@ class PestanaHabitaciones(ttk.Frame):
                 self.btCancelar.config(state=tk.NORMAL)
                 return
         messagebox.showerror("Error", "Habitación no encontrada")
-    def validar_entrada(self):
+    def validar_entrada(self, modo="guardar"):
         if not self.txHabitacionId.get().isdigit():
             messagebox.showerror("Error", "El ID de la habitación debe ser un número entero")
             return False
         if not self.txNumero.get().isdigit():
             messagebox.showerror("Error", "El número de la habitación debe ser un número entero")
             return False
-        if self.numero_habitacion_duplicado(self.txNumero.get()):
+        if modo == "guardar" and self.numero_habitacion_duplicado(self.txNumero.get()):
             messagebox.showerror("Error", "El número de la habitación ya existe")
             return False
         return True
@@ -342,6 +342,7 @@ class PestanaHabitaciones(ttk.Frame):
             if habitacion["Numero_Habitacion"] == numero_habitacion:
                 return True
         return False
+
 
     def salvar_habitacion(self):
         if not self.validar_entrada():
@@ -365,7 +366,7 @@ class PestanaHabitaciones(ttk.Frame):
         self.btEditar.config(state=tk.DISABLED)
 
     def editar_habitacion(self):
-        if not self.validar_entrada():
+        if not self.validar_entrada(modo="editar"):
             return
         id_habitacion = self.txHabitacionId.get()
         for habitacion in self.habitaciones:
@@ -528,9 +529,9 @@ class pestanaReservaciones(ttk.Frame):
             messagebox.showerror("Error", "El costo debe ser un número entero")
             return False
         if not re.match(r"\d{4}-\d{2}-\d{2}", self.txFechaSalida.get()):
-            messagebox.showerror("Error", "La fecha de salida debe estar en el formato AAAA-MM-DD")
+            messagebox.showerror("Error", "La fecha de salida debe estar en el formato DD-MM-YYYY")
             return False
-        fecha_salida = datetime.datetime.strptime(self.txFechaSalida.get(), "%Y-%m-%d")
+        fecha_salida = datetime.datetime.strptime(self.txFechaSalida.get(), "%d-%m-%Y")
         fecha_actual = datetime.datetime.now()
         if fecha_salida <= fecha_actual:
             messagebox.showerror("Error", "La fecha de salida debe ser mayor a la fecha actual")
@@ -641,3 +642,4 @@ class pestanaReservaciones(ttk.Frame):
 if __name__=="__main__":
     app=App()
     app.mainloop()
+
